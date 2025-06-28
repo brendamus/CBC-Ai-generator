@@ -1,0 +1,205 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Subjects{% endblock %}
+
+{% block content %}
+<div x-data="subjectManager()" x-init="fetchSubjects()">
+
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Manage Subjects</h2>
+
+    <div x-show="message" x-text="message" x-transition
+         :class="{ 'bg-green-100 border border-green-400 text-green-700': messageType === 'success', 'bg-red-100 border border-red-400 text-red-700': messageType === 'error' }"
+         class="px-4 py-3 rounded relative mb-4" role="alert">
+    </div>
+
+    <div x-show="showForm" x-transition x-cloak class="bg-white p-6 rounded-lg shadow mb-6">
+        <h3 class="text-xl font-semibold mb-4" x-text="formTitle()"></h3>
+        <form @submit.prevent="saveSubject">
+            <input type="hidden" x-model="formData.id">
+
+            <div class="mb-4">
+                <label for="subjectName" class="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+                <input type="text" id="subjectName" x-model="formData.name" required
+                       class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="button" @click="cancelForm()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded"
+                        :disabled="loading">
+                    <span x-show="!loading" x-text="formSubmitButtonText()"></span>
+                    <span x-show="loading">Saving...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mb-4">
+        <button @click="showAddForm()"
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow">
+            + Add New Subject
+        </button>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow overflow-x-auto">
+        <div x-show="loading && subjects.length === 0" class="text-center py-4">Loading subjects...</div>
+        <table class="min-w-full divide-y divide-gray-200" x-show="subjects.length > 0">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <template x-for="subject in subjects" :key="subject.id">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="subject.id"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" x-text="subject.name"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            <button @click="showEditForm(subject)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                            <button @click="confirmDelete(subject)" class="text-red-600 hover:text-red-900">Delete</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <div x-show="!loading && subjects.length === 0 && !message" class="text-center py-4 text-gray-500">No subjects found.</div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function subjectManager() {
+    return {
+        subjects: [],
+        showForm: false,
+        isEditing: false,
+        loading: false,
+        message: '',
+        messageType: 'success', // 'success' or 'error'
+        formData: {
+            id: null,
+            name: ''
+        },
+
+        formTitle() {
+            return this.isEditing ? 'Edit Subject' : 'Add New Subject';
+        },
+        formSubmitButtonText() {
+            return this.isEditing ? 'Update Subject' : 'Save Subject';
+        },
+
+        showMessage(msg, type = 'success', duration = 3000) {
+            this.message = msg;
+            this.messageType = type;
+            setTimeout(() => { this.message = ''; }, duration);
+        },
+
+        async fetchSubjects() {
+            this.loading = true;
+            this.message = '';
+            try {
+                const response = await fetch('/api/subjects'); // Assumes GET /api/subjects exists
+                if (!response.ok) throw new Error(`Error fetching subjects: ${response.statusText}`);
+                this.subjects = await response.json();
+            } catch (error) {
+                console.error(error);
+                this.showMessage(error.message || 'Failed to load subjects.', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        showAddForm() {
+            this.isEditing = false;
+            this.formData = { id: null, name: '' };
+            this.showForm = true;
+            this.message = ''; // Clear messages when showing form
+        },
+
+        async showEditForm(subject) {
+            // Could also fetch the subject again via GET /api/subjects/id if needed
+            this.isEditing = true;
+            this.formData = { ...subject }; // Copy subject data to form
+            this.showForm = true;
+            this.message = '';
+        },
+
+        cancelForm() {
+            this.showForm = false;
+            this.formData = { id: null, name: '' }; // Reset form
+            this.isEditing = false;
+        },
+
+        async saveSubject() {
+            this.loading = true;
+            this.message = '';
+            const url = this.isEditing ? `/api/subjects/${this.formData.id}` : '/api/subjects';
+            const method = this.isEditing ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: this.formData.name }) // Only send needed fields
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `${method} request failed`);
+                }
+
+                this.showMessage(`Subject successfully ${this.isEditing ? 'updated' : 'added'}!`, 'success');
+                this.cancelForm(); // Close form
+                await this.fetchSubjects(); // Refresh the list
+
+            } catch (error) {
+                console.error(error);
+                this.showMessage(error.message || 'Failed to save subject.', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        confirmDelete(subject) {
+            if (confirm(`Are you sure you want to delete the subject "${subject.name}"? This might fail if it has related strands.`)) {
+                this.deleteSubject(subject.id);
+            }
+        },
+
+        async deleteSubject(id) {
+            this.loading = true; // Indicate activity might be good here too
+            this.message = '';
+            try {
+                const response = await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+
+                if (!response.ok) {
+                     // Try to get error message from response if DELETE returns JSON error
+                    let errorMsg = `Error deleting subject: ${response.statusText}`;
+                    try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch {}
+                    throw new Error(errorMsg);
+                }
+
+                // On successful DELETE (status 204), response body is empty
+                this.showMessage('Subject deleted successfully!', 'success');
+                await this.fetchSubjects(); // Refresh the list
+
+            } catch (error) {
+                console.error(error);
+                this.showMessage(error.message || 'Failed to delete subject.', 'error');
+            } finally {
+                this.loading = false;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

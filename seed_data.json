@@ -1,0 +1,69 @@
+{
+    "subjects": ["Mathematics", "Science", "English"],
+    "grades": ["Grade 4", "Grade 5"],
+    "curriculum": [
+      {
+        "subject": "Science",
+        "grade": "Grade 4",
+        "strand": "Living Things",
+        "substrands": [
+          {
+            "name": "Plants",
+            "outcomes": [
+              "Identify parts of a plant.",
+              "Describe functions of plant parts."
+            ],
+            "questions": [
+              "What do roots do?",
+              "Why are leaves green?"
+            ]
+          },
+          {
+            "name": "Animals",
+            "outcomes": [
+              "Identify domestic animals.",
+              "Describe characteristics of mammals."
+            ],
+            "questions": [
+              "Name two domestic animals.",
+              "What is a mammal?"
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "Science",
+        "grade": "Grade 4",
+        "strand": "Environment",
+        "substrands": [
+          {
+            "name": "Weather",
+            "outcomes": [
+              "Identify weather symbols."
+            ],
+            "questions": [
+              "What does a sun symbol mean?"
+            ]
+          }
+        ]
+      },
+      {
+        "subject": "Mathematics",
+        "grade": "Grade 4",
+        "strand": "Numbers",
+        "substrands": [
+          {
+            "name": "Whole Numbers",
+            "outcomes": [
+              "Read numbers up to 1000.",
+              "Compare whole numbers."
+            ],
+            "questions": [
+              "Which is bigger: 500 or 300?"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  

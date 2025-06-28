@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - CBC AI Question Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], }, } } }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                         <a href="landing.html" class="text-2xl font-bold text-indigo-600">CBC AI Gen</a>
+                         <!-- Example of where to add the link inside your navigation bar -->
+                         <a href="{{ url_for('test_generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Generator</a>
+                    <a href="blog.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Blog</a>
+        
+                    <div id="auth-links" class="flex items-center space-x-4">
+                         <a href="login.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Login</a>
+                         <a href="register.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out shadow-sm">Sign Up</a>
+                         </div>
+        
+                    <div id="user-info" class="hidden items-center space-x-4"> <span id="user-email" class="text-sm sm:text-base text-gray-700 truncate max-w-[150px] sm:max-w-xs" title="Logged in user">user@example.com</span>
+                         <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="py-16 bg-white border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-900">Blog</h1>
+            <p class="mt-2 text-lg text-gray-600">Insights on AI in Education and CBC</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="space-y-12">
+
+            <article class="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-semibold text-indigo-700 mb-2">
+                    <a href="#" class="hover:underline">The Role of AI in Modernizing CBC Assessments</a>
+                </h2>
+                <p class="text-sm text-gray-500 mb-3">April 10, 2025 by Admin</p>
+                <p class="text-gray-600 mb-4">
+                    Exploring how artificial intelligence can help teachers create more diverse and frequent assessments aligned with the Competency-Based Curriculum goals...
+                </p>
+                <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Read More &rarr;</a>
+            </article>
+
+            <article class="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-semibold text-indigo-700 mb-2">
+                    <a href="#" class="hover:underline">Tips for Effective Question Generation with AI</a>
+                </h2>
+                <p class="text-sm text-gray-500 mb-3">April 5, 2025 by Admin</p>
+                <p class="text-gray-600 mb-4">
+                    Getting the best results from AI question generators requires clear prompts and understanding the learning outcomes. Here are some tips...
+                </p>
+                <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Read More &rarr;</a>
+            </article>
+
+             <article class="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-semibold text-indigo-700 mb-2">
+                    <a href="#" class="hover:underline">Understanding Key Inquiry Questions in CBC</a>
+                </h2>
+                <p class="text-sm text-gray-500 mb-3">March 28, 2025 by Admin</p>
+                <p class="text-gray-600 mb-4">
+                    Key Inquiry Questions are central to CBC's learning approach. How can AI help explore these questions further?...
+                </p>
+                <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Read More &rarr;</a>
+            </article>
+
+            </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            &copy; 2025 CBC AI Generator. All rights reserved.
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authLinks = document.getElementById('auth-links');
+            const userInfo = document.getElementById('user-info');
+            const userEmailSpan = document.getElementById('user-email');
+            const logoutButton = document.getElementById('logout-button');
+
+            // Check login status when the page loads
+            try {
+                const response = await fetch('/api/current_user');
+
+                if (response.ok) {
+                    // User is logged in
+                    const user = await response.json();
+                    if (authLinks) authLinks.classList.add('hidden'); // Hide login/register
+                    if (userInfo) {
+                        userInfo.classList.remove('hidden'); // Show user info
+                        userInfo.classList.add('flex'); // Use flex for alignment
+                    }
+                    if (userEmailSpan) userEmailSpan.textContent = user.email; // Display user email
+
+                    // Add event listener for the logout button
+                    if (logoutButton) {
+                        logoutButton.addEventListener('click', async () => {
+                            try {
+                                const logoutResponse = await fetch('/api/logout', { method: 'POST' });
+                                if (logoutResponse.ok) {
+                                    // Logout successful, reload the page to reflect logged-out state
+                                    window.location.reload();
+                                } else {
+                                    console.error('Logout failed:', await logoutResponse.text());
+                                    alert('Logout failed. Please try again.'); // Simple error feedback
+                                }
+                            } catch (error) {
+                                console.error('Error during logout:', error);
+                                alert('An error occurred during logout.');
+                            }
+                        });
+                    }
+
+                } else if (response.status === 401) {
+                    // User is logged out
+                    if (authLinks) authLinks.classList.remove('hidden'); // Show login/register
+                    if (userInfo) {
+                         userInfo.classList.add('hidden'); // Hide user info
+                         userInfo.classList.remove('flex');
+                    }
+
+                } else {
+                     // Handle other potential errors (e.g., server error)
+                     console.error('Error checking auth status:', response.statusText);
+                     if (authLinks) authLinks.classList.remove('hidden');
+                     if (userInfo) { userInfo.classList.add('hidden'); userInfo.classList.remove('flex'); }
+                }
+            } catch (error) {
+                console.error('Network error checking auth status:', error);
+                // Handle network errors - default to showing logged-out state
+                 if (authLinks) authLinks.classList.remove('hidden');
+                 if (userInfo) { userInfo.classList.add('hidden'); userInfo.classList.remove('flex'); }
+            }
+        });
+    </script>
+</body>
+</html>

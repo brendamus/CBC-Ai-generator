@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBC AI Question Generator - Unlimited Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], }, } } }
+    </script>
+    <style>
+        .quote-icon { font-size: 3rem; line-height: 1; color: #e0e7ff; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
+        #lightbulb-glow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; transform-origin: center; }
+    </style>
+</head>
+<body class="bg-white font-sans text-gray-800">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-2xl font-bold text-indigo-600">CBC AI Gen</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/generator" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Generator</a>
+                    <a href="/test-generator" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
+                    <a href="/blog" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Blog</a>
+        
+                    <div id="auth-links" class="hidden items-center space-x-4">
+                         <a href="/login" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                         <a href="/register" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm">Sign Up</a>
+                    </div>
+        
+                    <div id="user-info" class="hidden items-center space-x-4">
+                         <span id="user-email" class="text-sm sm:text-base text-gray-700"></span>
+                         <form id="logout-form" method="POST" action="/api/logout">
+                             <button id="logout-button" type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-gradient-to-br from-sky-50 to-indigo-100 py-20 md:py-28">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+                <div class="text-center md:text-left">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-indigo-800 leading-tight mb-6">Unlimited CBC Questions, Powered by AI</h1>
+                    <p class="text-lg md:text-xl text-gray-600 mb-8">Generate unique practice questions aligned with the Kenyan Competency-Based Curriculum for any subject and grade level instantly. Enhance learning and assessment effortlessly.</p>
+                    <a href="/generator" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out text-lg">
+                        Try the Generator Now
+                    </a>
+                </div>
+                <div class="flex justify-center items-center">
+                    <svg class="w-full max-w-md h-auto" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="80" r="15" fill="#cbd5e1"/> <rect x="90" y="95" width="20" height="40" rx="5" fill="#cbd5e1"/> <rect x="85" y="135" width="10" height="30" rx="3" fill="#cbd5e1"/> <rect x="105" y="135" width="10" height="30" rx="3" fill="#cbd5e1"/> <rect x="60" y="110" width="80" height="50" rx="5" fill="#94a3b8"/> <rect x="65" y="115" width="70" height="5" rx="2" fill="#e2e8f0"/> <rect x="75" y="95" width="15" height="8" rx="3" transform="rotate(-20 80 100)" fill="#cbd5e1"/> <rect x="110" y="95" width="15" height="8" rx="3" transform="rotate(20 115 100)" fill="#cbd5e1"/> <line x1="100" y1="65" x2="100" y2="50" stroke="#94a3b8" stroke-width="2"/> <circle cx="100" cy="40" r="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/> <circle id="lightbulb-glow" cx="100" cy="40" r="8" fill="#fef08a"/> <path d="M97 43 Q 100 37, 103 43" stroke="#eab308" stroke-width="1" fill="none"/> </svg>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <footer class="bg-gray-800 text-gray-400 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            &copy; 2025 CBC AI Generator. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authLinks = document.getElementById('auth-links');
+            const userInfo = document.getElementById('user-info');
+            const userEmailSpan = document.getElementById('user-email');
+            const logoutForm = document.getElementById('logout-form');
+
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const logoutResponse = await fetch('/api/logout', { method: 'POST' });
+                        if (logoutResponse.ok) { window.location.href = "/"; }
+                        else { alert('Logout failed.'); }
+                    } catch (error) { alert('An error occurred during logout.'); }
+                });
+            }
+
+            try {
+                const response = await fetch('/api/current_user');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (authLinks) authLinks.style.display = 'none';
+                    if (userInfo) {
+                        userInfo.style.display = 'flex';
+                        if(userEmailSpan) userEmailSpan.textContent = data.user.email;
+                    }
+                } else {
+                    if (authLinks) authLinks.style.display = 'flex';
+                    if (userInfo) userInfo.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                if (authLinks) authLinks.style.display = 'flex';
+                if (userInfo) userInfo.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - CBC AI Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; } /* Style for Alpine.js */
+        /* Add any admin-specific base styles here */
+    </style>
+</head>
+<body class="bg-gray-100 flex" x-data="{ sidebarOpen: true }">
+
+    <aside class="w-64 bg-gray-800 text-gray-200 min-h-screen p-4 transition-all duration-300"
+           :class="{ '-ml-64': !sidebarOpen }">
+        <h1 class="text-xl font-bold mb-6 border-b border-gray-700 pb-2">Admin Panel</h1>
+        <nav>
+            <ul>
+                <li class="mb-2"><a href="{{ url_for('admin_dashboard') }}" class="block hover:bg-gray-700 rounded px-2 py-1">Dashboard</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_manage_subjects') }}" class="block hover:bg-gray-700 rounded px-2 py-1">Manage Subjects</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_manage_grades') }}" class="block hover:bg-gray-700 rounded px-2 py-1">Manage Grades</a></li>
+                <li class="mb-2"><a href="#" class="block hover:bg-gray-700 rounded px-2 py-1">Manage Strands</a></li>
+                <li class="mb-2"><a href="#" class="block hover:bg-gray-700 rounded px-2 py-1">Manage SubStrands</a></li>
+                <li class="mb-2"><a href="#" class="block hover:bg-gray-700 rounded px-2 py-1">Manage Learning Outcomes</a></li>
+                <li class="mb-2"><a href="#" class="block hover:bg-gray-700 rounded px-2 py-1">Manage Key Inquiry Qs</a></li>
+                <li class="mt-6 border-t border-gray-700 pt-4">
+                    <a href="{{ url_for('home') }}" class="block hover:bg-gray-700 rounded px-2 py-1">Back to Main Site</a>
+                    <form action="{{ url_for('logout') }}" method="POST" class="inline">
+                        <button type="submit" class="w-full text-left block hover:bg-red-700 text-red-400 hover:text-white rounded px-2 py-1 mt-2">Logout</button>
+                     </form>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col transition-all duration-300">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <div class="text-gray-700">
+                Logged in as: <span class="font-semibold">{{ current_user.email if current_user.is_authenticated else 'N/A' }}</span>
+            </div>
+        </header>
+
+        <main class="flex-1 p-6 overflow-y-auto">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %} </body>
+</html>

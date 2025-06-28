@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBC AI Question Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" rel="stylesheet" />
+    <style>
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        select:disabled { background-color: #e9ecef; cursor: not-allowed; }
+        .taxonomy-badge { display: inline-block; padding: 0.25em 0.6em; font-size: 0.75em; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; margin-left: 0.5rem; background-color: #e0e7ff; color: #4338ca; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-gray-800 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">CBC AI Generator</a>
+            <div class="flex items-center space-x-4">
+                 <a href="/test-generator" class="hover:text-gray-300 text-sm sm:text-base">Test Generator</a>
+                 <a href="/blog" class="hover:text-gray-300 text-sm sm:text-base">Blog</a>
+                 <div id="auth-links" class="hidden items-center space-x-4">
+                     <a href="/login" class="hover:text-gray-300 text-sm sm:text-base">Login</a>
+                     <a href="/register" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm sm:text-base">Register</a>
+                </div>
+                <div id="user-info" class="hidden items-center space-x-4">
+                     <span id="user-email" class="text-sm sm:text-base truncate max-w-[150px] sm:max-w-xs"></span>
+                     <form id="logout-form" method="POST" action="/api/logout">
+                        <button id="logout-button" type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+                     </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Generate Curriculum Questions</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 bg-white p-6 rounded-lg shadow">
+            <div><label for="subject-select" class="block text-sm font-medium text-gray-700 mb-1">Subject</label><select id="subject-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm"></select></div>
+            <div><label for="grade-select" class="block text-sm font-medium text-gray-700 mb-1">Grade</label><select id="grade-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" disabled></select></div>
+            <div><label for="strand-select" class="block text-sm font-medium text-gray-700 mb-1">Strand</label><select id="strand-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" disabled></select></div>
+            <div><label for="substrand-select" class="block text-sm font-medium text-gray-700 mb-1">Sub-Strand</label><select id="substrand-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" disabled></select></div>
+            <div><label for="learning-outcome-select" class="block text-sm font-medium text-gray-700 mb-1">Learning Outcome</label><select id="learning-outcome-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" disabled></select></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 bg-white p-6 rounded-lg shadow">
+            <div><label for="num-questions" class="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label><input type="number" id="num-questions" value="5" min="1" max="20" class="w-full p-2 border border-gray-300 rounded-md shadow-sm"></div>
+            <div><label for="question-type" class="block text-sm font-medium text-gray-700 mb-1">Question Type</label><select id="question-type" class="w-full p-2 border border-gray-300 rounded-md shadow-sm"><option value="multiple_choice">Multiple Choice</option><option value="short_answer">Short Answer</option><option value="true_false">True/False</option><option value="fill_in_the_blank">Fill in the Blank</option></select></div>
+            <div class="flex items-end"><button id="generate-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Generate Questions</button></div>
+        </div>
+         <div class="bg-white p-6 rounded-lg shadow min-h-[200px]">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Generated Questions</h2>
+            <div id="loading-indicator" class="hidden loader"></div>
+            <div id="error-message-generation" class="text-red-600 mb-4 hidden"></div>
+            <div id="questions-output" class="space-y-4 text-gray-800"><p class="text-gray-500">Select a learning outcome and click "Generate Questions".</p></div>
+        </div>
+    </div>
+    <script>
+        const subjectSelect = document.getElementById('subject-select');
+        const gradeSelect = document.getElementById('grade-select');
+        const strandSelect = document.getElementById('strand-select');
+        const substrandSelect = document.getElementById('substrand-select');
+        const learningOutcomeSelect = document.getElementById('learning-outcome-select');
+        const numQuestionsInput = document.getElementById('num-questions');
+        const questionTypeSelect = document.getElementById('question-type');
+        const generateButton = document.getElementById('generate-button');
+        const questionsOutput = document.getElementById('questions-output');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const generationErrorDiv = document.getElementById('error-message-generation');
+        const authLinks = document.getElementById('auth-links');
+        const userInfo = document.getElementById('user-info');
+        const userEmailSpan = document.getElementById('user-email');
+        const logoutForm = document.getElementById('logout-form');
+
+        async function fetchData(url) {
+            try { const response = await fetch(url); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); return await response.json(); } catch (error) { console.error("Fetch error: ", error); generationErrorDiv.textContent = `Failed to load data from ${url}. ${error.message}`; generationErrorDiv.classList.remove('hidden'); return null; }
+        }
+        function populateDropdown(selectElement, items, defaultOptionText, valueField = 'id', nameField = 'name') {
+            selectElement.innerHTML = `<option value="">-- ${defaultOptionText} --</option>`; if (items && items.length > 0) { items.forEach(item => { const option = document.createElement('option'); option.value = item[valueField]; option.textContent = item[nameField]; selectElement.appendChild(option); }); selectElement.disabled = false; } else { selectElement.disabled = true; }
+        }
+        function resetDropdowns(...dropdowns) {
+            dropdowns.forEach(dd => { dd.innerHTML = `<option value="">-- Select --</option>`; dd.disabled = true; });
+             generateButton.disabled = true; questionsOutput.innerHTML = '<p class="text-gray-500">Select a learning outcome and click "Generate Questions".</p>'; generationErrorDiv.classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/current_user');
+                if (response.ok) {
+                    const data = await response.json();
+                    if(authLinks) authLinks.style.display = 'none';
+                    if(userInfo) { userInfo.style.display = 'flex'; if(userEmailSpan) userEmailSpan.textContent = data.user.email; }
+                } else { if(authLinks) authLinks.style.display = 'flex'; if(userInfo) userInfo.style.display = 'none'; }
+            } catch (error) { console.error('Auth check error:', error); if(authLinks) authLinks.style.display = 'flex'; if(userInfo) userInfo.style.display = 'none'; }
+            const subjects = await fetchData('/api/subjects');
+            if (subjects) { populateDropdown(subjectSelect, subjects, "Select Subject"); }
+            resetDropdowns(gradeSelect, strandSelect, substrandSelect, learningOutcomeSelect);
+        });
+
+        if (logoutForm) {
+            logoutForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    const logoutResponse = await fetch('/api/logout', { method: 'POST' });
+                    if (logoutResponse.ok) { window.location.href = "/"; } else { alert('Logout failed.'); }
+                } catch (error) { alert('Logout error.'); }
+            });
+        }
+        
+        subjectSelect.addEventListener('change', async () => {
+            resetDropdowns(gradeSelect, strandSelect, substrandSelect, learningOutcomeSelect);
+            if (subjectSelect.value) { const grades = await fetchData('/api/grades'); if (grades) populateDropdown(gradeSelect, grades, "Select Grade"); }
+        });
+        gradeSelect.addEventListener('change', async () => {
+            resetDropdowns(strandSelect, substrandSelect, learningOutcomeSelect);
+            if (subjectSelect.value && gradeSelect.value) { const strands = await fetchData(`/api/strands?subject_id=${subjectSelect.value}&grade_id=${gradeSelect.value}`); if (strands) populateDropdown(strandSelect, strands, "Select Strand"); }
+        });
+        strandSelect.addEventListener('change', async () => {
+            resetDropdowns(substrandSelect, learningOutcomeSelect);
+            if (strandSelect.value) { const substrands = await fetchData(`/api/substrands?strand_id=${strandSelect.value}`); if (substrands) populateDropdown(substrandSelect, substrands, "Select Sub-Strand"); }
+        });
+        substrandSelect.addEventListener('change', async () => {
+            resetDropdowns(learningOutcomeSelect);
+            if (substrandSelect.value) { const learningOutcomes = await fetchData(`/api/learning_outcomes?substrand_id=${substrandSelect.value}`); if (learningOutcomes) populateDropdown(learningOutcomeSelect, learningOutcomes, "Select Learning Outcome", 'id', 'description'); }
+        });
+        learningOutcomeSelect.addEventListener('change', () => { generateButton.disabled = !learningOutcomeSelect.value; });
+
+        generateButton.addEventListener('click', async () => {
+            if (!learningOutcomeSelect.value) { alert('Please select a learning outcome first.'); return; }
+            loadingIndicator.classList.remove('hidden'); questionsOutput.innerHTML = ''; generationErrorDiv.classList.add('hidden'); generateButton.disabled = true;
+            try {
+                const response = await fetch('/api/questions/generate', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ learning_outcome_id: parseInt(learningOutcomeSelect.value), num_questions: parseInt(numQuestionsInput.value), question_type: questionTypeSelect.value, }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    if (data && data.length > 0) {
+                         questionsOutput.innerHTML = data.map((q, index) => {
+                            let questionHTML = `<div class="p-3 border rounded bg-gray-50 mb-3 shadow-sm">`;
+                            questionHTML += `<div class="flex justify-between items-start mb-1"><strong class="text-gray-700">Q${index + 1}:</strong>`;
+                            if (q.taxonomy_level) { questionHTML += `<span class="taxonomy-badge">${q.taxonomy_level}</span>`; }
+                            questionHTML += `</div><p class="text-gray-800 mb-2">${q.question || q.question_text || 'No question text provided'}</p>`;
+                            if (q.type === 'multiple_choice' && q.options && Array.isArray(q.options)) {
+                                questionHTML += '<ul class="list-disc list-inside ml-4 space-y-1 text-sm text-gray-600">';
+                                q.options.forEach(opt => { questionHTML += `<li>${opt}</li>`; });
+                                questionHTML += '</ul>';
+                                if (q.answer) { questionHTML += `<p class="mt-2 text-sm text-green-600"><i>Correct Answer: ${q.answer}</i></p>`; }
+                            } else if (q.answer !== undefined) { questionHTML += `<p class="mt-2 text-sm text-green-600"><i>Answer: ${String(q.answer)}</i></p>`; }
+                            questionHTML += `</div>`; return questionHTML;
+                        }).join('');
+                     } else { questionsOutput.innerHTML = '<p class="text-gray-500">No questions were generated. The AI might need more specific context or the selected type might not be feasible.</p>'; }
+                } else { generationErrorDiv.textContent = data.error || data.message || 'An unknown error occurred.'; generationErrorDiv.classList.remove('hidden'); }
+            } catch (error) { console.error('Fetch error during generation:', error); generationErrorDiv.textContent = 'A network error occurred or the response was not valid JSON.'; generationErrorDiv.classList.remove('hidden'); }
+            finally { loadingIndicator.classList.add('hidden'); if (learningOutcomeSelect.value) { generateButton.disabled = false; } }
+        });
+    </script>
+</body>
+</html>

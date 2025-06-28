@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Test Generator - CBC AI Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" rel="stylesheet" />
+    <style>
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .taxonomy-badge { display: inline-block; padding: 0.25em 0.6em; font-size: 0.75em; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; margin-left: 0.5rem; background-color: #e0e7ff; color: #4338ca; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Standard Navigation Bar -->
+    <nav class="bg-gray-800 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">CBC AI Generator</a>
+            <div class="flex items-center space-x-4">
+                 <a href="/generator" class="hover:text-gray-300 text-sm sm:text-base">Single Topic Generator</a>
+                 <a href="/blog" class="hover:text-gray-300 text-sm sm:text-base">Blog</a>
+                 <div id="auth-links" class="hidden items-center space-x-4">
+                     <a href="/login" class="hover:text-gray-300 text-sm sm:text-base">Login</a>
+                     <a href="/register" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm sm:text-base">Register</a>
+                </div>
+                <div id="user-info" class="hidden items-center space-x-4">
+                     <span id="user-email" class="text-sm sm:text-base truncate max-w-[150px] sm:max-w-xs"></span>
+                     <form id="logout-form" method="POST" action="/api/logout">
+                        <button id="logout-button" type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>
+                     </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Full Test Generator</h1>
+
+        <!-- Step 1: Selection -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Step 1: Select Subject and Grade</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="subject-select" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <select id="subject-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                        <option value="">-- Select Subject --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="grade-select" class="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                    <select id="grade-select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                         <option value="">-- Select Grade --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Configure Topics -->
+        <div id="strands-container" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Step 2: Choose Topics and Number of Questions</h2>
+            <div id="strands-list" class="space-y-4">
+                <!-- Checkboxes will be inserted here by JavaScript -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="generate-test-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <span id="generate-button-text">Generate Full Test</span>
+                    <span id="generate-button-loading" class="hidden">Generating...</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Output Area -->
+        <div id="output-container" class="bg-white p-6 rounded-lg shadow min-h-[200px]">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Generated Test Paper</h2>
+            <div id="loading-indicator" class="hidden text-center py-8">
+                <div class="loader inline-block"></div>
+                <p class="mt-2 text-gray-600">Generating test... This may take a moment.</p>
+            </div>
+            <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"></div>
+            <div id="test-output">
+                <p class="text-gray-500">Select a subject, grade, and topics to generate a test.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element Selectors ---
+            const subjectSelect = document.getElementById('subject-select');
+            const gradeSelect = document.getElementById('grade-select');
+            const strandsContainer = document.getElementById('strands-container');
+            const strandsList = document.getElementById('strands-list');
+            const generateTestButton = document.getElementById('generate-test-button');
+            const generateButtonText = document.getElementById('generate-button-text');
+            const generateButtonLoading = document.getElementById('generate-button-loading');
+            const outputContainer = document.getElementById('output-container');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessageDiv = document.getElementById('error-message');
+            const testOutput = document.getElementById('test-output');
+            
+            // --- Auth UI Selectors ---
+            const authLinks = document.getElementById('auth-links');
+            const userInfo = document.getElementById('user-info');
+            const userEmailSpan = document.getElementById('user-email');
+            const logoutForm = document.getElementById('logout-form');
+
+            // --- Helper Functions ---
+            async function fetchData(url) {
+                try { const response = await fetch(url); if (!response.ok) throw new Error(`HTTP error ${response.status}`); return await response.json(); } catch (error) { console.error(`Fetch error from ${url}:`, error); errorMessageDiv.textContent = `Failed to load data. ${error.message}`; errorMessageDiv.classList.remove('hidden'); return null; }
+            }
+            function populateDropdown(selectElement, items, defaultOptionText) {
+                selectElement.innerHTML = `<option value="">-- ${defaultOptionText} --</option>`;
+                if (items && items.length > 0) {
+                    items.forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = item.name; selectElement.appendChild(option); });
+                }
+            }
+
+            // --- Initialization Logic ---
+            async function initializePage() {
+                // Auth Check
+                try {
+                    const response = await fetch('/api/current_user');
+                    if (response.ok) { const data = await response.json(); if(authLinks) authLinks.style.display = 'none'; if(userInfo) { userInfo.style.display = 'flex'; if(userEmailSpan) userEmailSpan.textContent = data.user.email; }
+                    } else { if(authLinks) authLinks.style.display = 'flex'; if(userInfo) userInfo.style.display = 'none'; }
+                } catch (error) { if(authLinks) authLinks.style.display = 'flex'; if(userInfo) userInfo.style.display = 'none'; }
+
+                // Fetch initial dropdown data
+                const [subjects, grades] = await Promise.all([ fetchData('/api/subjects'), fetchData('/api/grades') ]);
+                if (subjects) populateDropdown(subjectSelect, subjects, 'Select Subject');
+                if (grades) populateDropdown(gradeSelect, grades, 'Select Grade');
+            }
+            
+            // --- Event Listeners ---
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    try { const r = await fetch('/api/logout', { method: 'POST' }); if (r.ok) window.location.href = "/"; } catch (err) { alert('Logout error.'); }
+                });
+            }
+
+            async function handleSelectionChange() {
+                const subjectId = subjectSelect.value;
+                const gradeId = gradeSelect.value;
+                strandsContainer.classList.add('hidden');
+                strandsList.innerHTML = '';
+                generateTestButton.disabled = true;
+
+                if (subjectId && gradeId) {
+                    const strands = await fetchData(`/api/strands?subject_id=${subjectId}&grade_id=${gradeId}`);
+                    if (strands && strands.length > 0) {
+                        strands.forEach(strand => {
+                            const div = document.createElement('div');
+                            div.className = 'flex items-center space-x-4 p-3 border rounded-md bg-gray-50';
+                            div.innerHTML = `
+                                <input type="checkbox" id="strand-${strand.id}" value="${strand.id}" name="selected_strands" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <label for="strand-${strand.id}" class="flex-1 text-gray-800">${strand.name}</label>
+                                <div class="flex items-center space-x-2">
+                                    <label for="q-count-${strand.id}" class="text-sm text-gray-600">Questions:</label>
+                                    <input type="number" id="q-count-${strand.id}" value="3" min="1" max="20" class="w-20 p-1 border border-gray-300 rounded-md">
+                                </div>
+                            `;
+                            strandsList.appendChild(div);
+                        });
+                        strandsContainer.classList.remove('hidden');
+                    }
+                }
+            }
+
+            // Check if at least one checkbox is checked to enable the generate button
+            strandsList.addEventListener('change', () => {
+                const checkedBoxes = document.querySelectorAll('input[name="selected_strands"]:checked');
+                generateTestButton.disabled = checkedBoxes.length === 0;
+            });
+
+            subjectSelect.addEventListener('change', handleSelectionChange);
+            gradeSelect.addEventListener('change', handleSelectionChange);
+
+            generateTestButton.addEventListener('click', async () => {
+                const selectedCheckboxes = document.querySelectorAll('input[name="selected_strands"]:checked');
+                if (selectedCheckboxes.length === 0) {
+                    errorMessageDiv.textContent = 'Please select at least one topic (Strand).';
+                    errorMessageDiv.classList.remove('hidden');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                errorMessageDiv.classList.add('hidden');
+                testOutput.innerHTML = '';
+                generateTestButton.disabled = true;
+                generateButtonText.classList.add('hidden');
+                generateButtonLoading.classList.remove('hidden');
+
+                const topicsPayload = Array.from(selectedCheckboxes).map(cb => {
+                    const questionCountInput = document.getElementById(`q-count-${cb.value}`);
+                    return {
+                        strand_id: parseInt(cb.value),
+                        num_questions: parseInt(questionCountInput.value) || 3
+                    };
+                });
+                const payload = {
+                    subject_id: parseInt(subjectSelect.value),
+                    grade_id: parseInt(gradeSelect.value),
+                    topics: topicsPayload
+                };
+
+                try {
+                    const response = await fetch('/api/tests/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || result.details || 'Failed to generate test.');
+                    
+                    let outputHTML = `<h1 class="text-center text-2xl font-bold mb-2">${result.test_title || 'Generated Test'}</h1><hr class="my-4">`;
+                    result.sections.forEach((section, index) => {
+                        outputHTML += `<div class="mb-8"><h2 class="text-xl font-bold mb-4">Section ${index + 1}: ${section.section_title}</h2><div class="space-y-4">`;
+                        section.questions.forEach((q, qIndex) => {
+                            outputHTML += `<div class="p-3 border rounded bg-gray-50">
+                                <div class="flex justify-between items-start mb-1">
+                                    <strong class="text-gray-700">${qIndex + 1}. </strong>
+                                    ${q.taxonomy_level ? `<span class="taxonomy-badge">${q.taxonomy_level}</span>` : ''}
+                                </div>
+                                <p class="text-gray-800 mb-2">${q.question}</p>`;
+                            if (q.type === 'multiple_choice' && q.options) {
+                                outputHTML += '<ul class="list-disc list-inside ml-8 space-y-1 text-sm text-gray-600">';
+                                q.options.forEach(opt => { outputHTML += `<li>${opt}</li>`; });
+                                outputHTML += '</ul>';
+                            }
+                            outputHTML += '</div>';
+                        });
+                        outputHTML += `</div></div>`;
+                    });
+                    testOutput.innerHTML = outputHTML;
+
+                } catch (err) {
+                    errorMessageDiv.textContent = err.message || 'An unknown error occurred.';
+                    errorMessageDiv.classList.remove('hidden');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    generateTestButton.disabled = false;
+                    generateButtonText.classList.remove('hidden');
+                    generateButtonLoading.classList.add('hidden');
+                }
+            });
+
+            // Run initialization
+            initializePage();
+        });
+    </script>
+</body>
+</html>
