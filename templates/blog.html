@@ -17,19 +17,18 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                         <a href="landing.html" class="text-2xl font-bold text-indigo-600">CBC AI Gen</a>
-                         <!-- Example of where to add the link inside your navigation bar -->
-                         <a href="{{ url_for('test_generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
+                         <a href="{{ url_for('home') }}" class="text-2xl font-bold text-indigo-600">CONCEPT GENOME</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="index.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Generator</a>
-                    <a href="blog.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Blog</a>
-        
+                    <a href="{{ url_for('generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Generator</a>
+                    <a href="{{ url_for('test_generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
+                    <a href="{{ url_for('blog_page') }}" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Blog</a>
+
                     <div id="auth-links" class="flex items-center space-x-4">
-                         <a href="login.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Login</a>
-                         <a href="register.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out shadow-sm">Sign Up</a>
-                         </div>
+                        <a href="{{ url_for('login_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{{ url_for('register_page') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm">Sign Up</a>
+                        </div>
         
                     <div id="user-info" class="hidden items-center space-x-4"> <span id="user-email" class="text-sm sm:text-base text-gray-700 truncate max-w-[150px] sm:max-w-xs" title="Logged in user">user@example.com</span>
                          <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded">Logout</button>

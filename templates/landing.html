@@ -26,13 +26,13 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/generator" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Generator</a>
-                    <a href="/test-generator" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
-                    <a href="/blog" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Blog</a>
-        
+                    <a href="{{ url_for('generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Generator</a>
+                    <a href="{{ url_for('test_generator_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Test Generator</a>
+                    <a href="{{ url_for('blog_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Blog</a>
+
                     <div id="auth-links" class="hidden items-center space-x-4">
-                         <a href="/login" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                         <a href="/register" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm">Sign Up</a>
+                        <a href="{{ url_for('login_page') }}" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{{ url_for('register_page') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm">Sign Up</a>
                     </div>
         
                     <div id="user-info" class="hidden items-center space-x-4">
